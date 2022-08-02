@@ -45,55 +45,47 @@ class BgpAddressFamily(ConfigBase):
     identifier = ('name', )
 
     def render(self, config=None):
-        commands = list()
+        commands = []
 
-        context = 'address-family %s' % self.name
+        context = f'address-family {self.name}'
         if self.cast:
-            context += ' %s' % self.cast
+            context += f' {self.cast}'
 
         if config:
-            bgp_as = get_bgp_as(config)
-            if bgp_as:
-                section = ['router bgp %s' % bgp_as, context]
+            if bgp_as := get_bgp_as(config):
+                section = [f'router bgp {bgp_as}', context]
                 config = self.get_section(config, section)
 
-        if self.state == 'absent':
-            if context in config:
-                commands.append('no %s' % context)
+        if self.state == 'absent' and context in config:
+            commands.append(f'no {context}')
 
         if self.state == 'present':
-            subcommands = list()
+            subcommands = []
             for attr in self.argument_spec:
                 if attr in self.values:
-                    meth = getattr(self, '_set_%s' % attr, None)
-                    if meth:
-                        resp = meth(config)
-                        if resp:
+                    if meth := getattr(self, f'_set_{attr}', None):
+                        if resp := meth(config):
                             subcommands.extend(to_list(resp))
 
             if subcommands:
-                commands = [context]
-                commands.extend(subcommands)
-                commands.append('exit')
+                commands = [context, *subcommands, 'exit']
             elif not config or context not in config:
                 commands.extend([context, 'exit'])
 
         return commands
 
     def _set_networks(self, config=None):
-        commands = list()
+        commands = []
         for entry in self.networks:
             net = BgpNetwork(**entry)
-            resp = net.render(config)
-            if resp:
+            if resp := net.render(config):
                 commands.append(resp)
         return commands
 
     def _set_redistribute(self, config=None):
-        commands = list()
+        commands = []
         for entry in self.redistribute:
             redis = BgpRedistribute(**entry)
-            resp = redis.render(config)
-            if resp:
+            if resp := redis.render(config):
                 commands.append(resp)
         return commands

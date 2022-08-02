@@ -50,69 +50,67 @@ class BgpNeighbor(ConfigBase):
     identifier = ('neighbor', )
 
     def render(self, config=None):
-        commands = list()
+        commands = []
 
         if self.state == 'absent':
-            cmd = 'neighbor %s' % self.neighbor
+            cmd = f'neighbor {self.neighbor}'
             if not config or cmd in config:
-                commands = ['no %s' % cmd]
+                commands = [f'no {cmd}']
 
         elif self.state in ('present', None):
-            context = 'neighbor %s' % self.neighbor
-            section = ['router bgp %s' % get_bgp_as(config), context]
+            context = f'neighbor {self.neighbor}'
+            section = [f'router bgp {get_bgp_as(config)}', context]
             config = self.get_section(config, section)
-            cmd = 'remote-as %s' % (self.remote_as)
+            cmd = f'remote-as {self.remote_as}'
             if not config or cmd not in config:
                 commands.append(' '.join([context, cmd]))
             for attr in self.argument_spec:
                 if attr in self.values:
-                    meth = getattr(self, '_set_%s' % attr, None)
-                    if meth:
-                        command = meth(config)
-                        if command:
+                    if meth := getattr(self, f'_set_{attr}', None):
+                        if command := meth(config):
                             commands.extend(to_list(' '.join([context,
                                                               command])))
         return commands
 
     def _set_description(self, config=None):
-        cmd = 'description %s' % self.description
+        cmd = f'description {self.description}'
         if not config or cmd not in config:
             return cmd
 
     def _set_enabled(self, config=None):
         cmd = 'shutdown'
         if self.enabled is True:
-            cmd = 'no %s' % cmd
+            cmd = f'no {cmd}'
         if not config or cmd not in config:
             return cmd
 
     def _set_update_source(self, config=None):
-        cmd = 'update-source %s' % (self.update_source.replace(' ', ''))
+        cmd = f"update-source {self.update_source.replace(' ', '')}"
         if not config or cmd not in config:
             return cmd
 
     def _set_password(self, config=None):
-        cmd = 'password %s' % self.password
+        cmd = f'password {self.password}'
         if not config or cmd not in config:
             return cmd
 
     def _set_ebgp_multihop(self, config=None):
-        cmd = 'ebgp-multihop %s' % self.ebgp_multihop
+        cmd = f'ebgp-multihop {self.ebgp_multihop}'
         if not config or cmd not in config:
             return cmd
 
     def _set_tcp_mss(self, config=None):
-        cmd = 'tcp mss %s' % self.tcp_mss
+        cmd = f'tcp mss {self.tcp_mss}'
         if not config or cmd not in config:
             return cmd
 
     def _set_advertisement_interval(self, config=None):
-        cmd = 'advertisement-interval %s' % self.advertisement_interval
+        cmd = f'advertisement-interval {self.advertisement_interval}'
         if not config or cmd not in config:
             return cmd
 
     def _set_neighbor_group(self, config=None):
-        cmd = 'use neighbor-group %s' % self.neighbor_group
+        cmd = f'use neighbor-group {self.neighbor_group}'
         if not config or cmd not in config:
             return cmd
 
@@ -120,6 +118,5 @@ class BgpNeighbor(ConfigBase):
         """generate bgp timer related configuration
         """
         timer = BgpTimer(**self.timers)
-        resp = timer.render(config)
-        if resp:
+        if resp := timer.render(config):
             return resp

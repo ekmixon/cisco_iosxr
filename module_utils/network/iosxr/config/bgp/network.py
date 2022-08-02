@@ -43,17 +43,17 @@ class BgpNetwork(ConfigBase):
         if not self.mask and '/' not in self.network:
             raise ValueError('specify network in CIDR notation or specify the mask')
 
-        cmd = 'network %s' % self.network
+        cmd = f'network {self.network}'
 
         if '/' not in self.network:
-            cmd += ' %s' % self.mask
+            cmd += f' {self.mask}'
 
         if self.route_map:
-            cmd += ' route-map %s' % self.route_map
+            cmd += f' route-map {self.route_map}'
 
         if self.state == 'absent':
             if not config or cmd in config:
-                return 'no %s' % cmd
+                return f'no {cmd}'
 
         elif self.state in ('present', None):
             if not config or cmd not in config:

@@ -29,6 +29,5 @@ import re
 
 
 def get_bgp_as(config):
-    match = re.search(r'^router bgp (\d+)', config, re.M)
-    if match:
-        return int(match.group(1))
+    if match := re.search(r'^router bgp (\d+)', config, re.M):
+        return int(match[1])

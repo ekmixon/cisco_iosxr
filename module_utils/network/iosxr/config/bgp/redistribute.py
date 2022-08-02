@@ -42,20 +42,20 @@ class BgpRedistribute(ConfigBase):
     identifier = ('protocol', )
 
     def render(self, config=None):
-        cmd = 'redistribute %s' % self.protocol
+        cmd = f'redistribute {self.protocol}'
 
-        if self.id and self.protocol in self.PROTOCOLS[0:3]:
-            cmd += ' %s' % self.id
+        if self.id and self.protocol in self.PROTOCOLS[:3]:
+            cmd += f' {self.id}'
 
         if self.metric:
-            cmd += ' metric %s' % str(self.metric)
+            cmd += f' metric {str(self.metric)}'
 
         if self.route_map:
-            cmd += ' route-map %s' % self.route_map
+            cmd += f' route-map {self.route_map}'
 
         if self.state == 'absent':
             if not config or cmd in config:
-                return 'no %s' % cmd
+                return f'no {cmd}'
 
         elif self.state in ('present', None):
             if not config or cmd not in config:

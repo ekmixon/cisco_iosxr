@@ -43,15 +43,14 @@ class BgpTimer(ConfigBase):
         cmd = 'timers'
 
         if self.state in ('present', None):
-            if self.keepalive and self.holdtime:
-                cmd = '%s %s %s' % (cmd, self.keepalive, self.holdtime)
-                if self.min_neighbor_holdtime:
-                    cmd += ' %s' % self.min_neighbor_holdtime
-                if not config or cmd not in config:
-                    return cmd
-            else:
+            if not self.keepalive or not self.holdtime:
                 raise ValueError("required both options for timers: keepalive and holdtime")
 
+            cmd = f'{cmd} {self.keepalive} {self.holdtime}'
+            if self.min_neighbor_holdtime:
+                cmd += f' {self.min_neighbor_holdtime}'
+            if not config or cmd not in config:
+                return cmd
         elif self.state == 'absent':
             if not config or cmd in config:
-                return 'no %s' % cmd
+                return f'no {cmd}'

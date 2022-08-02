@@ -52,7 +52,7 @@ class UserManager:
         have = self.generate_existing_users()
         filtered_users = [x for x in want if x not in have]
 
-        changed = True if len(filtered_users) > 0 else False
+        changed = len(filtered_users) > 0
 
         return changed, filtered_users
 
@@ -61,7 +61,7 @@ class ActionModule(ActionBase):
 
     def run(self, tmp=None, task_vars=None):
         if task_vars is None:
-            task_vars = dict()
+            task_vars = {}
 
         result = super(ActionModule, self).run(tmp, task_vars)
 
@@ -69,7 +69,7 @@ class ActionModule(ActionBase):
             new_users = self._task.args['new_users']
             user_config_data = self._task.args['user_config']
         except KeyError as exc:
-            return {'failed': True, 'msg': 'missing required argument: %s' % exc}
+            return {'failed': True, 'msg': f'missing required argument: {exc}'}
 
         result['changed'], result['stdout'] = UserManager(new_users, user_config_data).filter_users()
 

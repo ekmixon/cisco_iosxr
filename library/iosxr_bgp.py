@@ -349,7 +349,7 @@ def main():
     config = get_config(module, config_filter='router bgp')
 
     result = {'changed': False}
-    commands = list()
+    commands = []
 
     bgp_as = get_bgp_as(config)
 
@@ -360,8 +360,7 @@ def main():
 
     process = BgpProcess(**module.params)
 
-    resp = process.render(config)
-    if resp:
+    if resp := process.render(config):
         commands.extend(resp)
     if commands:
         if not module.check_mode:

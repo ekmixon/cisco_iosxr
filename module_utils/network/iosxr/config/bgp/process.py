@@ -48,31 +48,28 @@ class BgpProcess(ConfigBase):
     identifier = ('bgp_as', )
 
     def render(self, config=None):
-        commands = list()
+        commands = []
 
-        context = 'router bgp %s' % self.bgp_as
+        context = f'router bgp {self.bgp_as}'
 
         if self.state in ('absent', 'replace'):
-            bgp_as = get_bgp_as(config)
-            if bgp_as:
-                commands.append('no router bgp %s' % bgp_as)
+            if bgp_as := get_bgp_as(config):
+                commands.append(f'no router bgp {bgp_as}')
             if self.state == 'replace':
                 commands.append(context)
 
         if self.state in ('present', 'replace'):
             for attr in self.argument_spec:
                 if attr in self.values:
-                    meth = getattr(self, '_set_%s' % attr, None)
-                    if meth:
-                        resp = meth(config)
-                        if resp:
+                    if meth := getattr(self, f'_set_{attr}', None):
+                        if resp := meth(config):
                             if not commands:
                                 commands.append(context)
                             commands.extend(to_list(resp))
         return commands
 
     def _set_router_id(self, config=None):
-        cmd = 'bgp router-id %s' % self.router_id
+        cmd = f'bgp router-id {self.router_id}'
         if not config or cmd not in config:
             return cmd
 
@@ -80,40 +77,37 @@ class BgpProcess(ConfigBase):
         cmd = 'bgp log neighbor changes'
         if self.log_neighbor_changes is True:
             if not config or cmd not in config:
-                return '%s detail' % cmd
+                return f'{cmd} detail'
         elif self.log_neighbor_changes is False:
             if config and cmd in config:
-                return '%s disable' % cmd
+                return f'{cmd} disable'
 
     def _set_neighbors(self, config):
         """ generate bgp neighbor configuration
         """
-        commands = list()
+        commands = []
         for entry in self.neighbors:
             nbr = BgpNeighbor(**entry)
-            resp = nbr.render(config)
-            if resp:
+            if resp := nbr.render(config):
                 commands.extend(resp)
         return commands
 
     def _set_neighbor_groups(self, config):
         """ generate bgp neighbor group configuration
         """
-        commands = list()
+        commands = []
         for entry in self.neighbor_groups:
             nbr_grp = BgpNeighborGroup(**entry)
-            resp = nbr_grp.render(config)
-            if resp:
+            if resp := nbr_grp.render(config):
                 commands.extend(resp)
         return commands
 
     def _set_address_families(self, config):
         """ generate address-family configuration
         """
-        commands = list()
+        commands = []
         for entry in self.address_families:
             af = BgpAddressFamily(**entry)
-            resp = af.render(config)
-            if resp:
+            if resp := af.render(config):
                 commands.extend(resp)
         return commands
